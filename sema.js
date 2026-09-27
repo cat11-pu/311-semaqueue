@@ -1,8 +1,21 @@
-// sema.js：信号量的占用与唤醒（基线：一律原样返回）
+// sema.js：信号量的剩余容量与排队唤醒
 export function freeRoom(capacity, holders) {
-  return 0;
+  let used = 0;
+  for (const row of holders) used += row[1];
+  return capacity - used;
 }
 
 export function wakeUp(capacity, holders, queue) {
-  return { holders: holders, queue: queue };
+  const awakened = [];
+  const rest = queue.slice();
+  const baseFree = freeRoom(capacity, holders);
+  let granted = 0;
+  while (rest.length > 0) {
+    const head = rest[0];
+    if (baseFree - granted < head[1]) break;
+    granted += head[1];
+    awakened.push([rest.shift()[0], head[1]]);
+  }
+  const kept = holders.map(function (row) { return [row[0], row[1]]; });
+  return { holders: awakened.concat(kept), queue: rest };
 }
